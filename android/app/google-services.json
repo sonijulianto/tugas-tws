@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "952136036086",
+    "project_id": "karyawan-asabri",
+    "storage_bucket": "karyawan-asabri.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:952136036086:android:77bf9525da7c63be2506d7",
+        "android_client_info": {
+          "package_name": "com.karyawan.aplikasi_asabri_nullsafety"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "952136036086-uijmmvfapemq4okesrcf91nul1pui8gn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDLLGfmNlYGogcWsJciQu649y7K83N3CIM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "952136036086-uijmmvfapemq4okesrcf91nul1pui8gn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
