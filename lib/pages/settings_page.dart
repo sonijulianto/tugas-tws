@@ -1,20 +1,29 @@
+import 'dart:io';
 import 'package:aplikasi_asabri_nullsafety/common/theme.dart';
 import 'package:aplikasi_asabri_nullsafety/cubit/auth_cubit.dart';
 import 'package:aplikasi_asabri_nullsafety/provider/preferences_provider.dart';
+import 'package:aplikasi_asabri_nullsafety/provider/scheduling_provider.dart';
+import 'package:aplikasi_asabri_nullsafety/widget/custom_dialog.dart';
 import 'package:aplikasi_asabri_nullsafety/widget/platform_widget.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
 
-class SettingsPage extends StatelessWidget {
+class SettingsPage extends StatefulWidget {
   static const String settingsTitle = 'Settings';
+
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
 
   Widget _buildAndroid(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          settingsTitle,
+          SettingsPage.settingsTitle,
           style: whiteTextStyle,
         ),
         centerTitle: true,
@@ -27,7 +36,7 @@ class SettingsPage extends StatelessWidget {
   Widget _buildIos(BuildContext context) {
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
-        middle: Text(settingsTitle),
+        middle: Text(SettingsPage.settingsTitle),
       ),
       child: _buildList(context),
     );
@@ -87,6 +96,25 @@ class SettingsPage extends StatelessWidget {
                           ),
                         );
                       },
+                    ),
+                    Material(
+                      child: ListTile(
+                        title: Text('Pengingat Absen'),
+                        trailing: Consumer<SchedulingProvider>(
+                          builder: (context, scheduled, _) {
+                            return Switch.adaptive(
+                              value: scheduled.isScheduled,
+                              onChanged: (value) async {
+                                if (Platform.isIOS) {
+                                  customDialog(context);
+                                } else {
+                                  scheduled.scheduledNews(value);
+                                }
+                              },
+                            );
+                          },
+                        ),
+                      ),
                     ),
                   ],
                 ),

@@ -66,11 +66,12 @@ final TextTheme myTextTheme = TextTheme(
 
 ThemeData lightTheme = ThemeData(
   primaryColor: textColor,
-  accentColor: textColor,
+  colorScheme: ColorScheme.light(),
   scaffoldBackgroundColor: Colors.white,
   visualDensity: VisualDensity.adaptivePlatformDensity,
   textTheme: myTextTheme,
   appBarTheme: AppBarTheme(
+    backgroundColor: textColor,
     textTheme: myTextTheme.apply(bodyColor: Colors.black),
     elevation: 0,
   ),
@@ -93,7 +94,7 @@ ThemeData lightTheme = ThemeData(
 
 ThemeData darkTheme = ThemeData.dark().copyWith(
   primaryColor: darkPrimaryColor,
-  accentColor: darkSecondaryColor,
+  colorScheme: ColorScheme.dark(),
   visualDensity: VisualDensity.adaptivePlatformDensity,
   textTheme: myTextTheme,
   appBarTheme: AppBarTheme(

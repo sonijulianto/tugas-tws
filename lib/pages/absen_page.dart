@@ -221,7 +221,6 @@ class _AbsenPageState extends State<AbsenPage> {
       appBar: AppBar(
         centerTitle: true,
         automaticallyImplyLeading: false,
-        backgroundColor: textColor,
         title: Text(
           AbsenPage.absenTitle,
           style: whiteTextStyle,
