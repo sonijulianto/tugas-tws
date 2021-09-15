@@ -22,14 +22,14 @@ class PreferencesProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _getDailyNewsPreferences() async {
-    _isDailyNewsActive = await preferencesHelper.isDailyNewsActive;
-    notifyListeners();
-  }
-
   void enableDarkTheme(bool value) {
     preferencesHelper.setDarkTheme(value);
     _getTheme();
+  }
+
+  void _getDailyNewsPreferences() async {
+    _isDailyNewsActive = await preferencesHelper.isDailyNewsActive;
+    notifyListeners();
   }
 
   void enableDailyNews(bool value) {

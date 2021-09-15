@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:aplikasi_asabri_nullsafety/common/theme.dart';
 import 'package:aplikasi_asabri_nullsafety/cubit/auth_cubit.dart';
+import 'package:aplikasi_asabri_nullsafety/pages/sign_in_page.dart';
 import 'package:aplikasi_asabri_nullsafety/provider/preferences_provider.dart';
 import 'package:aplikasi_asabri_nullsafety/provider/scheduling_provider.dart';
 import 'package:aplikasi_asabri_nullsafety/widget/custom_dialog.dart';
@@ -9,6 +10,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsPage extends StatefulWidget {
   static const String settingsTitle = 'Settings';
@@ -18,7 +20,6 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-
   Widget _buildAndroid(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -74,8 +75,12 @@ class _SettingsPageState extends State<SettingsPage> {
                         return ListTile(
                           title: Text('Keluar'),
                           trailing: IconButton(
-                              onPressed: () {
+                              onPressed: () async {
                                 context.read<AuthCubit>().signOut();
+                                SharedPreferences prefs =
+                                    await SharedPreferences.getInstance();
+                                SignInPage.user =
+                                    prefs.getString(SignInPage.emailUser);
                               },
                               icon: Icon(
                                 Icons.chevron_right,
@@ -87,7 +92,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     Consumer<PreferencesProvider>(
                       builder: (context, provider, child) {
                         return ListTile(
-                          title: Text('Dark Theme'),
+                          title: Text('Mode Gelap'),
                           trailing: Switch.adaptive(
                             value: provider.isDarkTheme,
                             onChanged: (value) {

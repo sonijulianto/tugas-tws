@@ -8,11 +8,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+// ignore: must_be_immutable
 class SignInPage extends StatefulWidget {
   SignInPage({Key? key}) : super(key: key);
 
-  static const String emailUser = 'emailUser';
-  static const String passwordUser = 'passwordUser';
+  static late String emailUser = 'emailUser';
+  static late String passwordUser = 'passwordUser';
+  static var user;
 
   @override
   _SignInPageState createState() => _SignInPageState();
@@ -50,36 +52,51 @@ class _SignInPageState extends State<SignInPage> {
       }
 
       Widget passwordInput() {
-        return TextFormField(
-          cursorColor: textColor,
-          obscureText: _obscureText,
-          controller: passwordController,
-          decoration: InputDecoration(
-            hintText: 'Your Password',
-            hintStyle: textTextStyle,
-            suffixIcon: IconButton(
-              icon:
-                  Icon(_obscureText ? Icons.visibility : Icons.visibility_off),
-              onPressed: () {
-                setState(() {
-                  _obscureText = !_obscureText;
-                });
-              },
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Password',
+              style: textTextStyle,
             ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(
-                24,
+            TextFormField(
+              cursorColor: textColor,
+              obscureText: _obscureText,
+              controller: passwordController,
+              decoration: InputDecoration(
+                hintText: 'Your Password',
+                hintStyle: textTextStyle,
+                suffixIcon: IconButton(
+                  // focusColor: textColor,
+                  // color: textColor,
+                  // highlightColor: textColor,
+                  // hoverColor: textColor,
+                  // splashColor: textColor,
+                  disabledColor: textColor,
+                  icon: Icon(
+                      _obscureText ? Icons.visibility : Icons.visibility_off),
+                  onPressed: () {
+                    setState(() {
+                      _obscureText = !_obscureText;
+                    });
+                  },
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(
+                    24,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(
+                    24,
+                  ),
+                  borderSide: BorderSide(
+                    color: textColor,
+                  ),
+                ),
               ),
             ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(
-                24,
-              ),
-              borderSide: BorderSide(
-                color: textColor,
-              ),
-            ),
-          ),
+          ],
         );
       }
 
@@ -146,13 +163,16 @@ class _SignInPageState extends State<SignInPage> {
               height: 20,
             ),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
+                SignInPage.user != null ? SizedBox() : SizedBox(),
                 submitButton(),
                 SizedBox(
                   width: 10,
                 ),
-                buildAuthenticate(context),
+                SignInPage.user != null
+                    ? buildAuthenticate(context)
+                    : SizedBox()
               ],
             ),
           ],
@@ -254,4 +274,9 @@ class _SignInPageState extends State<SignInPage> {
           ),
         ),
       );
+
+  Future<void> fingerprintButton() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.remove(SignInPage.user);
+  }
 }

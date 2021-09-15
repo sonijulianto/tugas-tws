@@ -1,7 +1,5 @@
 import 'dart:isolate';
-
 import 'dart:ui';
-
 import 'package:aplikasi_asabri_nullsafety/main.dart';
 import 'package:aplikasi_asabri_nullsafety/utils/notification_helper.dart';
 

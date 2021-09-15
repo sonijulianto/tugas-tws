@@ -44,17 +44,17 @@ class _HomePageState extends State<HomePage> {
     ),
   ];
 
-  @override
-  void initState() {
-    super.initState();
-    _notificationHelper.configureSelectNotificationSubject('/home');
-  }
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   _notificationHelper.configureSelectNotificationSubject('/splashPage');
+  // }
 
-  @override
-  void dispose() {
-    selectNotificationSubject.close();
-    super.dispose();
-  }
+  // @override
+  // void dispose() {
+  //   selectNotificationSubject.close();
+  //   super.dispose();
+  // }
 
   void _onBottomNavTapped(int index) {
     setState(() {
