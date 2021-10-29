@@ -34,11 +34,6 @@ dependencies:
   fluttertoast: ^8.0.8
   google_maps_flutter: ^2.0.6
   image_picker: ^0.8.3+2
-  firebase_auth: ^3.0.2
-  firebase_core: ^1.5.0
-  cloud_firestore: ^2.5.0
-  equatable: ^2.0.3
-  flutter_bloc: ^7.1.0
   intl: ^0.17.0
   local_auth: ^1.1.6
   shared_preferences: ^2.0.7
@@ -46,6 +41,11 @@ dependencies:
   flutter_local_notifications: ^8.1.1+2
   android_alarm_manager: ^2.0.2
   rxdart: ^0.27.2
+  aad_oauth: ^0.3.0
+  http: ^0.13.3
+  bloc: ^7.2.1
+  flutter_bloc: ^7.3.1
+  infinite_scroll_pagination: ^3.1.0
 
 dev_dependencies:
   flutter_test:

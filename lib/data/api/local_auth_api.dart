@@ -15,6 +15,7 @@ class LocalAuthApi {
   static Future<List<BiometricType>> getBiometrics() async {
     try {
       return await _auth.getAvailableBiometrics();
+    // ignore: unused_catch_clause
     } on PlatformException catch (e) {
       return <BiometricType>[];
     }
@@ -25,6 +26,7 @@ class LocalAuthApi {
     if (!isAvailable) return false;
 
     try {
+      // ignore: deprecated_member_use
       return await _auth.authenticateWithBiometrics(
         localizedReason: 'Scan Fingerprint to Authenticate',
         useErrorDialogs: true,

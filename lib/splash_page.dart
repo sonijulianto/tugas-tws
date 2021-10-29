@@ -1,10 +1,10 @@
 import 'dart:async';
-
+import 'package:aad_oauth/aad_oauth.dart';
 import 'package:aplikasi_asabri_nullsafety/common/theme.dart';
-import 'package:aplikasi_asabri_nullsafety/cubit/auth_cubit.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:aplikasi_asabri_nullsafety/main.dart';
+import 'package:aplikasi_asabri_nullsafety/pages/sign_in_page.dart';
+import 'package:aplikasi_asabri_nullsafety/widget/show_message.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 class SplashPage extends StatefulWidget {
   SplashPage({Key? key}) : super(key: key);
@@ -14,21 +14,19 @@ class SplashPage extends StatefulWidget {
 }
 
 class _SplashPageState extends State<SplashPage> {
+  final AadOAuth oauth = AadOAuth(MyApp.config);
+
   @override
   void initState() {
     Timer(Duration(seconds: 3), () {
-      User? user = FirebaseAuth.instance.currentUser;
-
-      if (user == null) {
-        Navigator.pushNamedAndRemoveUntil(
-            context, '/sign-in', (route) => false);
-      } else {
-        print(user.email);
-        context.read<AuthCubit>().getCurrentUser(user.uid);
-        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
-      }
+      login();
     });
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   @override
@@ -64,5 +62,20 @@ class _SplashPageState extends State<SplashPage> {
         ],
       ),
     );
+  }
+
+  void showError(dynamic ex) {
+    showMessage(context, ex.toString());
+  }
+
+  void login() async {
+    try {
+      await oauth.login();
+      var accessToken = await oauth.getAccessToken();
+      SignInPage.accessToken = accessToken;
+      Navigator.pushNamed(context, '/home');
+    } catch (e) {
+      showError(e);
+    }
   }
 }

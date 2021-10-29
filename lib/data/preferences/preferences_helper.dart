@@ -27,8 +27,4 @@ class PreferencesHelper {
     final prefs = await sharedPreferences;
     prefs.setBool(DAILY_NEWS, value);
   }
-
-  // void setFingerprint(String value) async {
-  //   final prefs = await sharedPreferences.
-  // }
 }

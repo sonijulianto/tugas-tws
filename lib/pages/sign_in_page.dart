@@ -1,10 +1,10 @@
+import 'package:aad_oauth/aad_oauth.dart';
 import 'package:aplikasi_asabri_nullsafety/common/theme.dart';
-import 'package:aplikasi_asabri_nullsafety/cubit/auth_cubit.dart';
 import 'package:aplikasi_asabri_nullsafety/data/api/local_auth_api.dart';
+import 'package:aplikasi_asabri_nullsafety/main.dart';
 import 'package:aplikasi_asabri_nullsafety/widget/custom_button.dart';
 import 'package:aplikasi_asabri_nullsafety/widget/custom_text_form_field.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -15,6 +15,7 @@ class SignInPage extends StatefulWidget {
   static late String emailUser = 'emailUser';
   static late String passwordUser = 'passwordUser';
   static var user;
+  static late String? accessToken;
 
   @override
   _SignInPageState createState() => _SignInPageState();
@@ -26,9 +27,18 @@ class _SignInPageState extends State<SignInPage> {
   final TextEditingController passwordController =
       TextEditingController(text: '');
   bool _obscureText = true;
+  final AadOAuth oauth = AadOAuth(MyApp.config);
+
+  @override
+  void initState() {
+    login();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
+    oauth.setWebViewScreenSizeFromMedia(MediaQuery.of(context));
+
     Widget inputSection() {
       Widget title() {
         return Container(
@@ -67,11 +77,6 @@ class _SignInPageState extends State<SignInPage> {
                 hintText: 'Your Password',
                 hintStyle: textTextStyle,
                 suffixIcon: IconButton(
-                  // focusColor: textColor,
-                  // color: textColor,
-                  // highlightColor: textColor,
-                  // hoverColor: textColor,
-                  // splashColor: textColor,
                   disabledColor: textColor,
                   icon: Icon(
                       _obscureText ? Icons.visibility : Icons.visibility_off),
@@ -101,44 +106,27 @@ class _SignInPageState extends State<SignInPage> {
       }
 
       Widget submitButton() {
-        return BlocConsumer<AuthCubit, AuthState>(
-          listener: (context, state) {
-            if (state is AuthSuccess) {
-              Navigator.pushNamedAndRemoveUntil(
-                  context, '/home', (route) => false);
-            } else if (state is AuthFailed) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  backgroundColor: Colors.red,
-                  content: Text(state.error),
-                ),
-              );
-            }
-          },
-          builder: (context, state) {
-            if (state is AuthLoading) {
-              return Center(
-                child: CircularProgressIndicator(),
-              );
-            }
+        return Expanded(
+          child: CustomButton(
+            bgColor: textColor,
+            title: 'Masuk',
+            width: double.infinity,
+            onPressed: () async {
+              SharedPreferences prefs = await SharedPreferences.getInstance();
+              prefs.setString(SignInPage.emailUser, emailController.text);
+              prefs.setString(SignInPage.passwordUser, passwordController.text);
+            },
+          ),
+        );
+      }
 
-            return Expanded(
-              child: CustomButton(
-                title: 'Masuk',
-                width: double.infinity,
-                onPressed: () async {
-                  context.read<AuthCubit>().signIn(
-                        email: emailController.text,
-                        password: passwordController.text,
-                      );
-                  SharedPreferences prefs =
-                      await SharedPreferences.getInstance();
-                  prefs.setString(SignInPage.emailUser, emailController.text);
-                  prefs.setString(
-                      SignInPage.passwordUser, passwordController.text);
-                },
-              ),
-            );
+      Widget loginButton() {
+        return CustomButton(
+          title: 'Masuk with azure',
+          width: double.infinity,
+          bgColor: secondaryColor,
+          onPressed: () {
+            login();
           },
         );
       }
@@ -165,16 +153,21 @@ class _SignInPageState extends State<SignInPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                SignInPage.user != null ? SizedBox() : SizedBox(),
                 submitButton(),
-                SizedBox(
-                  width: 10,
-                ),
+                SignInPage.user != null
+                    ? SizedBox(
+                        width: 10,
+                      )
+                    : SizedBox(),
                 SignInPage.user != null
                     ? buildAuthenticate(context)
                     : SizedBox()
               ],
             ),
+            SizedBox(
+              height: 10,
+            ),
+            loginButton(),
           ],
         ),
       );
@@ -243,12 +236,6 @@ class _SignInPageState extends State<SignInPage> {
           final isAuthenticated = await LocalAuthApi.authenticate();
 
           if (isAuthenticated) {
-            SharedPreferences prefs = await SharedPreferences.getInstance();
-            var email = prefs.getString(SignInPage.emailUser);
-            var password = prefs.getString(SignInPage.passwordUser);
-            context
-                .read<AuthCubit>()
-                .signIn(email: email!, password: password!);
             Navigator.of(context).pushReplacementNamed('/home');
           }
         },
@@ -278,5 +265,37 @@ class _SignInPageState extends State<SignInPage> {
   Future<void> fingerprintButton() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.remove(SignInPage.user);
+  }
+
+  void showError(dynamic ex) {
+    showMessage(
+      ex.toString(),
+    );
+  }
+
+  void showMessage(String text) {
+    var alert = AlertDialog(
+      content: Text(text),
+      actions: <Widget>[
+        TextButton(
+          child: const Text('Ok'),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+      ],
+    );
+    showDialog(context: context, builder: (BuildContext context) => alert);
+  }
+
+  void login() async {
+    try {
+      await oauth.login();
+      var accessToken = await oauth.getAccessToken();
+      SignInPage.accessToken = accessToken;
+      Navigator.pushNamed(context, '/home');
+    } catch (e) {
+      showError('anda telah logout.');
+    }
   }
 }

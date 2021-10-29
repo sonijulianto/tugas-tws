@@ -5,10 +5,11 @@ final Color textColor = Color(0xFF042C49);
 final Color whiteColor = Color(0xFFFFFFFF);
 final Color blackColor = Color(0xff000000);
 final Color greyColor = Color(0xff9698A9);
-final Color greenColor = Colors.green;
-final Color redColor = Colors.red;
+final Color greenColor = Colors.green.shade300;
+final Color redColor = Colors.red.shade300;
 final Color darkPrimaryColor = Color(0xFF000000);
 final Color darkSecondaryColor = Color(0xff64ffda);
+final Color secondaryColor = Color(0xffD1A42B);
 
 TextStyle whiteTextStyle = GoogleFonts.poppins(
   color: whiteColor,
@@ -27,6 +28,9 @@ TextStyle greenTextStyle = GoogleFonts.poppins(
 );
 TextStyle redTextStyle = GoogleFonts.poppins(
   color: redColor,
+);
+TextStyle secondaryTextStyle = GoogleFonts.poppins(
+  color: secondaryColor,
 );
 
 FontWeight light = FontWeight.w300;
@@ -72,7 +76,8 @@ ThemeData lightTheme = ThemeData(
   textTheme: myTextTheme,
   appBarTheme: AppBarTheme(
     backgroundColor: textColor,
-    textTheme: myTextTheme.apply(bodyColor: Colors.black),
+    // TextTheme.apply(bodyColor: Colors.black)
+    titleTextStyle: TextStyle(color: Colors.black),
     elevation: 0,
   ),
   bottomNavigationBarTheme: BottomNavigationBarThemeData(
@@ -98,16 +103,16 @@ ThemeData darkTheme = ThemeData.dark().copyWith(
   visualDensity: VisualDensity.adaptivePlatformDensity,
   textTheme: myTextTheme,
   appBarTheme: AppBarTheme(
-    textTheme: myTextTheme.apply(bodyColor: Colors.white),
+    titleTextStyle: TextStyle(color: Colors.white),
     elevation: 0,
   ),
   bottomNavigationBarTheme: BottomNavigationBarThemeData(
-    selectedItemColor: darkSecondaryColor,
+    selectedItemColor: secondaryColor,
     unselectedItemColor: Colors.grey,
   ),
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(
-      primary: textColor,
+      primary: secondaryColor,
       textStyle: TextStyle(),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.all(
