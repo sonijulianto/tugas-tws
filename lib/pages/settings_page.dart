@@ -86,7 +86,11 @@ class _SettingsPageState extends State<SettingsPage> {
                       value: scheduled.isScheduled,
                       onChanged: (value) async {
                         if (Platform.isIOS) {
-                          customDialog(context);
+                          customDialog(
+                            context,
+                            'Coming Soon!',
+                            'This feature will be coming soon!',
+                          );
                         } else {
                           scheduled.enableDailyNews(value);
                         }

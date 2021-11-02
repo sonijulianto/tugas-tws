@@ -65,7 +65,7 @@ class _BlankPageState extends State<BlankPage> {
       SignInPage.accessToken = accessToken;
       Navigator.pushNamed(context, '/home');
     } catch (e) {
-      showError('anda telah logout.');
+      showError(e.toString());
     }
   }
 }

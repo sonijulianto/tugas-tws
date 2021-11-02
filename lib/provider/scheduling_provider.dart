@@ -35,8 +35,29 @@ class SchedulingProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> _scheduledNewsGo() async {
+    _isScheduled = await preferencesHelper!.isDailyNewsActive;
+    if (_isScheduled) {
+      print('Scheduling News Activated');
+      notifyListeners();
+      return await AndroidAlarmManager.periodic(
+        Duration(hours: 24),
+        2,
+        BackgroundService.callback,
+        startAt: DateTimeHelperGo.format(),
+        exact: true,
+        wakeup: true,
+      );
+    } else {
+      print('Scheduling News Canceled');
+      notifyListeners();
+      return await AndroidAlarmManager.cancel(1);
+    }
+  }
+
   void enableDailyNews(bool value) {
     preferencesHelper!.setDailyNews(value);
     _scheduledNews();
+    _scheduledNewsGo();
   }
 }

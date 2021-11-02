@@ -1,10 +1,15 @@
+import 'dart:async';
 import 'dart:io';
+import 'package:aad_oauth/aad_oauth.dart';
 import 'package:aplikasi_asabri_nullsafety/common/theme.dart';
 import 'package:aplikasi_asabri_nullsafety/data/api/api_service.dart';
 import 'package:aplikasi_asabri_nullsafety/data/models/Absen_model.dart';
+import 'package:aplikasi_asabri_nullsafety/data/models/Request_model.dart';
 import 'package:aplikasi_asabri_nullsafety/data/models/User_model.dart';
+import 'package:aplikasi_asabri_nullsafety/main.dart';
 import 'package:aplikasi_asabri_nullsafety/pages/sign_in_page.dart';
 import 'package:aplikasi_asabri_nullsafety/provider/preferences_provider.dart';
+import 'package:aplikasi_asabri_nullsafety/widget/custom_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geocoding/geocoding.dart';
@@ -13,6 +18,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:safe_device/safe_device.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // ignore: must_be_immutable
@@ -27,6 +33,12 @@ class AbsenPage extends StatefulWidget {
 }
 
 class _AbsenPageState extends State<AbsenPage> {
+  final AadOAuth oauth = AadOAuth(MyApp.config);
+
+  void logout() async {
+    await oauth.logout();
+  }
+
   XFile? _picture;
   File? imageFile;
   int statusKerja = 0;
@@ -42,13 +54,41 @@ class _AbsenPageState extends State<AbsenPage> {
   String divisi = '';
   int divisiid = 0;
 
+  bool isJailBroken = false;
+  bool canMockLocation = false;
+  bool isRealDevice = true;
+  bool isOnExternalStorage = false;
+  bool isSafeDevice = false;
+
   Position? currentposition;
   String currentAddress = '';
   LatLng? latLng;
 
   late Future<User> user;
+  late Future<RequestModel> response;
   ApiService? _apiService;
   static bool _isLoading = false;
+
+  Future<void> initPlatformState() async {
+    if (!mounted) return;
+    try {
+      isJailBroken = await SafeDevice.isJailBroken;
+      canMockLocation = await SafeDevice.canMockLocation;
+      isRealDevice = await SafeDevice.isRealDevice;
+      isOnExternalStorage = await SafeDevice.isOnExternalStorage;
+      isSafeDevice = await SafeDevice.isSafeDevice;
+    } catch (error) {
+      print(error);
+    }
+
+    setState(() {
+      isJailBroken = isJailBroken;
+      canMockLocation = canMockLocation;
+      isRealDevice = isRealDevice;
+      isOnExternalStorage = isOnExternalStorage;
+      isSafeDevice = isSafeDevice;
+    });
+  }
 
   _openCamera(BuildContext context) async {
     var picture = await ImagePicker().pickImage(source: ImageSource.camera);
@@ -171,8 +211,9 @@ class _AbsenPageState extends State<AbsenPage> {
   void initState() {
     _determinePosition();
     googleMaps();
-    user = ApiService().fetchSharp(SignInPage.accessToken!);
+    response = ApiService().fetchSharp(context, SignInPage.accessToken!);
     _apiService = ApiService();
+    initPlatformState();
     super.initState();
   }
 
@@ -197,210 +238,228 @@ class _AbsenPageState extends State<AbsenPage> {
                 style: whiteTextStyle,
               ),
             ),
-            body: FutureBuilder<User>(
-              future: user,
+            body: FutureBuilder<RequestModel>(
+              future: response,
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
-                  return Container(
-                    margin: EdgeInsets.only(
-                      right: 30,
-                      left: 30,
-                    ),
-                    child: Form(
-                      key: _formKey,
-                      child: SingleChildScrollView(
-                        child: Column(
-                          children: [
-                            costumTextForm(
-                              snapshot.data!.nama!,
-                              snapshot.data!.nipas,
-                              snapshot.data!.divisi,
-                            ),
-                            radioListSK(
-                              provider.isDarkTheme
-                                  ? greyTextStyle
-                                  : textTextStyle,
-                              provider.isDarkTheme
-                                  ? greyTextStyle.copyWith(fontWeight: semiBold)
-                                  : textTextStyle.copyWith(
-                                      fontWeight: semiBold),
-                              provider.isDarkTheme ? greyColor : textColor,
-                            ),
-                            statusKerja == 1
-                                ? radioListWFH(
-                                    provider.isDarkTheme
-                                        ? greyTextStyle
-                                        : textTextStyle,
-                                    provider.isDarkTheme
-                                        ? greyTextStyle.copyWith(
-                                            fontWeight: semiBold)
-                                        : textTextStyle.copyWith(
-                                            fontWeight: semiBold),
-                                    provider.isDarkTheme
-                                        ? greyColor
-                                        : textColor,
-                                  )
-                                : SizedBox(),
-                            statusKerja != 0
-                                ? radioListKeKantor(
-                                    provider.isDarkTheme
-                                        ? greyTextStyle
-                                        : textTextStyle,
-                                    provider.isDarkTheme
-                                        ? greyTextStyle.copyWith(
-                                            fontWeight: semiBold)
-                                        : textTextStyle.copyWith(
-                                            fontWeight: semiBold),
-                                    provider.isDarkTheme
-                                        ? greyColor
-                                        : textColor,
-                                  )
-                                : SizedBox(),
-                            keKantorMenggunakan != 0
-                                ? radioListKondisiKesehatan(
-                                    provider.isDarkTheme
-                                        ? greyTextStyle
-                                        : textTextStyle,
-                                    provider.isDarkTheme
-                                        ? greyTextStyle.copyWith(
-                                            fontWeight: semiBold)
-                                        : textTextStyle.copyWith(
-                                            fontWeight: semiBold),
-                                    provider.isDarkTheme
-                                        ? greyColor
-                                        : textColor,
-                                  )
-                                : SizedBox(),
-                            kondisiKesehatan != 0
-                                ? radioListJenisAbsen(
-                                    provider.isDarkTheme
-                                        ? greyTextStyle
-                                        : textTextStyle,
-                                    provider.isDarkTheme
-                                        ? greyTextStyle.copyWith(
-                                            fontWeight: semiBold)
-                                        : textTextStyle.copyWith(
-                                            fontWeight: semiBold),
-                                    provider.isDarkTheme
-                                        ? greyColor
-                                        : textColor,
-                                  )
-                                : SizedBox(),
-                            location(
-                              provider.isDarkTheme
-                                  ? greyTextStyle.copyWith(fontWeight: semiBold)
-                                  : textTextStyle.copyWith(
-                                      fontWeight: semiBold),
-                              provider.isDarkTheme ? greyColor : textColor,
-                            ),
-                            insertImage(context),
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                minimumSize: Size(double.infinity, 50),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
+                  if (snapshot.data!.isSucces) {
+                    return Container(
+                      margin: EdgeInsets.only(
+                        right: 30,
+                        left: 30,
+                      ),
+                      child: Form(
+                        key: _formKey,
+                        child: SingleChildScrollView(
+                          child: Column(
+                            children: [
+                              costumTextForm(
+                                snapshot.data!.data!.nama!,
+                                snapshot.data!.data!.nipas,
+                                snapshot.data!.data!.divisi,
                               ),
-                              onPressed: () async {
-                                if (statusKerja == 0) {
-                                  _isLoading = true;
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        'Mohon isi status kerja',
-                                        textAlign: TextAlign.center,
-                                      ),
-                                      backgroundColor: Colors.amber,
-                                    ),
-                                  );
-                                  _isLoading = false;
-                                } else if (jenisAbsen == 0) {
-                                  _isLoading = true;
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        'Mohon isi jenis absen',
-                                        textAlign: TextAlign.center,
-                                      ),
-                                      backgroundColor: Colors.amber,
-                                    ),
-                                  );
-                                  _isLoading = false;
-                                } else {
-                                  _isLoading = true;
-                                  _formKey.currentState!.save();
-
-                                  nipas = snapshot.data!.nipas;
-                                  divisi = snapshot.data!.divisi;
-                                  username = snapshot.data!.username;
-                                  divisiid = snapshot.data!.divisiid;
-                                  var docName =
-                                      _picture == null ? '' : _picture!.name;
-                                  var docSize = _picture == null
-                                      ? 0
-                                      : await _picture!.length();
-                                  DateFormat dateFormat =
-                                      DateFormat("yyyy-MM-dd HH:mm:ss");
-
-                                  AbsenModel absen = AbsenModel(
-                                    absNipas: nipas,
-                                    absDivisi: divisi,
-                                    absStatus: statusKerja,
-                                    absAlasan: alasanWFH,
-                                    absTransportasi: keKantorMenggunakan,
-                                    absKondisi: kondisiKesehatan,
-                                    absJenis: jenisAbsen,
-                                    absLatitude: latitude,
-                                    absLongitude: longitude,
-                                    absDocName: docName,
-                                    absDocSize: docSize,
-                                    absUsrnam: username,
-                                    absUsrdat:
-                                        dateFormat.format(DateTime.now()),
-                                    absSuhu: '',
-                                    absAddress: currentAddress,
-                                    absOther: '',
-                                    divisiid: divisiid,
-                                    absZona: '',
-                                    absDateAbsen:
-                                        dateFormat.format(DateTime.now()),
-                                    absKegiatan: '',
-                                  );
-
-                                  _apiService!.saveWithImage(absen,
-                                      SignInPage.accessToken!, imageFile);
-
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                          'terimakasih  telah melakukan absen'),
-                                      backgroundColor: greenColor,
-                                    ),
-                                  );
-                                  _isLoading = false;
-                                  Navigator.pushNamed(context, '/home');
-                                }
-                              },
-                              child: _isLoading
-                                  ? Center(
-                                      child: CircularProgressIndicator(
-                                        color: whiteColor,
-                                      ),
+                              radioListSK(
+                                provider.isDarkTheme
+                                    ? greyTextStyle
+                                    : textTextStyle,
+                                provider.isDarkTheme
+                                    ? greyTextStyle.copyWith(
+                                        fontWeight: semiBold)
+                                    : textTextStyle.copyWith(
+                                        fontWeight: semiBold),
+                                provider.isDarkTheme ? greyColor : textColor,
+                              ),
+                              statusKerja == 1
+                                  ? radioListWFH(
+                                      provider.isDarkTheme
+                                          ? greyTextStyle
+                                          : textTextStyle,
+                                      provider.isDarkTheme
+                                          ? greyTextStyle.copyWith(
+                                              fontWeight: semiBold)
+                                          : textTextStyle.copyWith(
+                                              fontWeight: semiBold),
+                                      provider.isDarkTheme
+                                          ? greyColor
+                                          : textColor,
                                     )
-                                  : Text(
-                                      'submit',
-                                      style:
-                                          whiteTextStyle.copyWith(fontSize: 16),
-                                    ),
-                            ),
-                            SizedBox(
-                              height: 20,
-                            ),
-                          ],
+                                  : SizedBox(),
+                              statusKerja != 0
+                                  ? radioListKeKantor(
+                                      provider.isDarkTheme
+                                          ? greyTextStyle
+                                          : textTextStyle,
+                                      provider.isDarkTheme
+                                          ? greyTextStyle.copyWith(
+                                              fontWeight: semiBold)
+                                          : textTextStyle.copyWith(
+                                              fontWeight: semiBold),
+                                      provider.isDarkTheme
+                                          ? greyColor
+                                          : textColor,
+                                    )
+                                  : SizedBox(),
+                              keKantorMenggunakan != 0
+                                  ? radioListKondisiKesehatan(
+                                      provider.isDarkTheme
+                                          ? greyTextStyle
+                                          : textTextStyle,
+                                      provider.isDarkTheme
+                                          ? greyTextStyle.copyWith(
+                                              fontWeight: semiBold)
+                                          : textTextStyle.copyWith(
+                                              fontWeight: semiBold),
+                                      provider.isDarkTheme
+                                          ? greyColor
+                                          : textColor,
+                                    )
+                                  : SizedBox(),
+                              kondisiKesehatan != 0
+                                  ? radioListJenisAbsen(
+                                      provider.isDarkTheme
+                                          ? greyTextStyle
+                                          : textTextStyle,
+                                      provider.isDarkTheme
+                                          ? greyTextStyle.copyWith(
+                                              fontWeight: semiBold)
+                                          : textTextStyle.copyWith(
+                                              fontWeight: semiBold),
+                                      provider.isDarkTheme
+                                          ? greyColor
+                                          : textColor,
+                                    )
+                                  : SizedBox(),
+                              location(
+                                provider.isDarkTheme
+                                    ? greyTextStyle.copyWith(
+                                        fontWeight: semiBold)
+                                    : textTextStyle.copyWith(
+                                        fontWeight: semiBold),
+                                provider.isDarkTheme ? greyColor : textColor,
+                              ),
+                              insertImage(context),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  minimumSize: Size(double.infinity, 50),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                ),
+                                onPressed: () async {
+                                  if (canMockLocation) {
+                                    _isLoading = true;
+                                    customDialog(
+                                      context,
+                                      'Peringatan!!!',
+                                      'Matikan fake location.',
+                                    );
+                                    _isLoading = false;
+                                  } else if (statusKerja == 0) {
+                                    _isLoading = true;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Mohon isi status kerja',
+                                          textAlign: TextAlign.center,
+                                        ),
+                                        backgroundColor: Colors.amber,
+                                      ),
+                                    );
+                                    _isLoading = false;
+                                  } else if (jenisAbsen == 0) {
+                                    _isLoading = true;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Mohon isi jenis absen',
+                                          textAlign: TextAlign.center,
+                                        ),
+                                        backgroundColor: Colors.amber,
+                                      ),
+                                    );
+                                    _isLoading = false;
+                                  } else {
+                                    _isLoading = true;
+                                    _formKey.currentState!.save();
+
+                                    nipas = snapshot.data!.data!.nipas;
+                                    divisi = snapshot.data!.data!.divisi;
+                                    username = snapshot.data!.data!.username;
+                                    divisiid = snapshot.data!.data!.divisiid;
+                                    var docName =
+                                        _picture == null ? '' : _picture!.name;
+                                    var docSize = _picture == null
+                                        ? 0
+                                        : await _picture!.length();
+                                    DateFormat dateFormat =
+                                        DateFormat("yyyy-MM-dd HH:mm:ss");
+
+                                    AbsenModel absen = AbsenModel(
+                                      absNipas: nipas,
+                                      absDivisi: divisi,
+                                      absStatus: statusKerja,
+                                      absAlasan: alasanWFH,
+                                      absTransportasi: keKantorMenggunakan,
+                                      absKondisi: kondisiKesehatan,
+                                      absJenis: jenisAbsen,
+                                      absLatitude: latitude,
+                                      absLongitude: longitude,
+                                      absDocName: docName,
+                                      absDocSize: docSize,
+                                      absUsrnam: username,
+                                      absUsrdat:
+                                          dateFormat.format(DateTime.now()),
+                                      absSuhu: '',
+                                      absAddress: currentAddress,
+                                      absOther: '',
+                                      divisiid: divisiid,
+                                      absZona: '',
+                                      absDateAbsen:
+                                          dateFormat.format(DateTime.now()),
+                                      absKegiatan: '',
+                                    );
+
+                                    _apiService!.saveWithImage(
+                                      absen,
+                                      SignInPage.accessToken!,
+                                      imageFile,
+                                    );
+
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'terimakasih  telah melakukan absen',
+                                        ),
+                                        backgroundColor: greenColor,
+                                      ),
+                                    );
+                                    _isLoading = false;
+                                    Navigator.pushNamed(context, '/home');
+                                  }
+                                },
+                                child: _isLoading
+                                    ? Center(
+                                        child: CircularProgressIndicator(
+                                          color: whiteColor,
+                                        ),
+                                      )
+                                    : Text(
+                                        'submit',
+                                        style: whiteTextStyle.copyWith(
+                                            fontSize: 16),
+                                      ),
+                              ),
+                              SizedBox(
+                                height: 20,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  );
+                    );
+                  } else {
+                    showError();
+                  }
                 } else if (snapshot.hasError) {
                   return Center(child: Text(snapshot.error.toString()));
                 }
@@ -413,6 +472,23 @@ class _AbsenPageState extends State<AbsenPage> {
             ));
       },
     );
+  }
+
+  showError() async {
+    await Future.delayed(Duration(microseconds: 1));
+    showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          Timer(Duration(seconds: 3), () {
+            logout();
+            Navigator.pushNamed(context, '/blank');
+          });
+          return AlertDialog(
+            title: Text("Peringatan"),
+            content: Text("Mohon maaf user anda tidak terdaftar!"),
+          );
+        });
   }
 
   Row insertImage(BuildContext context) {

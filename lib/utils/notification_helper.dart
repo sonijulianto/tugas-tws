@@ -40,19 +40,23 @@ class NotificationHelper {
       FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin) async {
     var _channelId = "1";
     var _channelName = "channel_01";
-    var _channelDescription = "dicoding news channel";
+    var _channelDescription = "asabri absen channel";
 
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-        _channelId, _channelName, _channelDescription,
-        importance: Importance.max,
-        priority: Priority.high,
-        ticker: 'ticker',
-        styleInformation: DefaultStyleInformation(true, true));
+      _channelId,
+      _channelName,
+      _channelDescription,
+      importance: Importance.max,
+      priority: Priority.high,
+      ticker: 'ticker',
+      styleInformation: DefaultStyleInformation(true, true),
+    );
 
     var iOSPlatformChannelSpecifics = IOSNotificationDetails();
     var platformChannelSpecifics = NotificationDetails(
-        android: androidPlatformChannelSpecifics,
-        iOS: iOSPlatformChannelSpecifics);
+      android: androidPlatformChannelSpecifics,
+      iOS: iOSPlatformChannelSpecifics,
+    );
 
     var titleNotification = "<b>Kamu belum absen nih</b>";
     var titleNews = 'klik disini yuk untuk absen';

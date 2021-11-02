@@ -3,28 +3,49 @@ import 'dart:io';
 
 import 'package:aplikasi_asabri_nullsafety/data/models/Absen_model.dart';
 import 'package:aplikasi_asabri_nullsafety/data/models/Rekap_model.dart';
+import 'package:aplikasi_asabri_nullsafety/data/models/Request_model.dart';
 import 'package:aplikasi_asabri_nullsafety/data/models/User_model.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
 
 class ApiService {
   final String _baseUrl = 'https://dev-absensi.asabri.co.id/api/';
 
-  Future<User> fetchSharp(String token) async {
-    var response = await http.get(Uri.parse(_baseUrl + 'user/getuser'),
-        headers: {HttpHeaders.authorizationHeader: 'Bearer ' + token});
-    return User.fromJson(jsonDecode(response.body));
+  Future<RequestModel> fetchSharp(BuildContext context, String token) async {
+    var response = await http.get(
+      Uri.parse(_baseUrl + 'user/getuser'),
+      headers: {HttpHeaders.authorizationHeader: 'Bearer ' + token},
+    );
+    if (response.statusCode == 200) {
+      return RequestModel(
+        isSucces: true,
+        data: User.fromJson(
+          jsonDecode(response.body),
+        ),
+      );
+    } else if (response.statusCode == 401) {
+      return RequestModel(
+        isSucces: false,
+        message: response.body,
+      );
+    } else {
+      throw Exception('This account not found');
+    }
   }
 
   Future<List<HistoriAbsen>> getListUser(String token) async {
     var response = await http.get(
-        Uri.parse(_baseUrl + 'user/getlistabsen/0/10'),
-        headers: {HttpHeaders.authorizationHeader: 'Bearer ' + token});
+      Uri.parse(_baseUrl + 'user/getlistabsen/0/10'),
+      headers: {HttpHeaders.authorizationHeader: 'Bearer ' + token},
+    );
     if (response.statusCode == 200) {
       Map<String, dynamic> map = jsonDecode(response.body);
       List<dynamic> jsonResponse = map["data"];
       return jsonResponse
-          .map((rekap) => new HistoriAbsen.fromJson(rekap))
+          .map(
+            (rekap) => new HistoriAbsen.fromJson(rekap),
+          )
           .toList();
     } else {
       throw Exception('Unexpected error occured!');

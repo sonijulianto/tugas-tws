@@ -302,6 +302,14 @@ class _RekapPageState extends State<RekapPage> {
                             width: 300,
                             height: 300,
                             decoration: BoxDecoration(
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.grey.withOpacity(0.4),
+                                  spreadRadius: -50,
+                                  blurRadius: 30,
+                                  offset: Offset(0, 10),
+                                ),
+                              ],
                               image: DecorationImage(
                                 image: provider.isDarkTheme
                                     ? AssetImage('assets/data-not-found-2.png')
