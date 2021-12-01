@@ -1,28 +1,31 @@
 import 'package:aplikasi_asabri_nullsafety/common/theme.dart';
-import 'package:aplikasi_asabri_nullsafety/data/api/local_auth_api.dart';
-import 'package:aplikasi_asabri_nullsafety/pages/home_page.dart';
 import 'package:aplikasi_asabri_nullsafety/provider/auth_provider.dart';
 import 'package:aplikasi_asabri_nullsafety/widget/custom_button.dart';
 import 'package:aplikasi_asabri_nullsafety/widget/custom_text_form_field.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-// import 'package:shared_preferences/shared_preferences.dart';
 
 // ignore: must_be_immutable
-class SignInPage extends StatefulWidget {
-  SignInPage({Key? key}) : super(key: key);
+class SignUpPage extends StatefulWidget {
+  SignUpPage({Key? key}) : super(key: key);
 
-  static late String emailUser = 'emailUser';
-  static late String passwordUser = 'passwordUser';
-  // static late bool user;
-  static late String? nip;
+  static late String namalUser = '';
+  static late String niplUser = '';
+  static late String divisilUser = '';
+  static late String usernamelUser = '';
+  static late String passwordUser = '';
+  static var user;
   static late String? accessToken;
 
   @override
-  _SignInPageState createState() => _SignInPageState();
+  _SignUpPageState createState() => _SignUpPageState();
 }
 
-class _SignInPageState extends State<SignInPage> {
+class _SignUpPageState extends State<SignUpPage> {
+  final TextEditingController nameController = TextEditingController(text: '');
+  final TextEditingController nipController = TextEditingController(text: '');
+  final TextEditingController divisiController =
+      TextEditingController(text: '');
   final TextEditingController usernameController =
       TextEditingController(text: '');
   final TextEditingController passwordController =
@@ -34,26 +37,76 @@ class _SignInPageState extends State<SignInPage> {
   Widget build(BuildContext context) {
     AuthProvider authProvider = Provider.of<AuthProvider>(context);
 
-    handleSignIn() async {
+    handleSignUp() async {
       setState(() {
         isLoading = true;
       });
 
-      var user = await authProvider.login(
+      if (nameController.text == '') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.amber,
+            content: Text(
+              'Masukan nama',
+              textAlign: TextAlign.center,
+            ),
+          ),
+        );
+      } else if (nipController.text == '') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.amber,
+            content: Text(
+              'Masukan nip',
+              textAlign: TextAlign.center,
+            ),
+          ),
+        );
+      } else if (divisiController.text == '') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.amber,
+            content: Text(
+              'Masukan divisi',
+              textAlign: TextAlign.center,
+            ),
+          ),
+        );
+      } else if (usernameController.text == '') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.amber,
+            content: Text(
+              'Masukan username',
+              textAlign: TextAlign.center,
+            ),
+          ),
+        );
+      } else if (await authProvider.register(
+        name: nameController.text,
+        nip: nipController.text,
+        divisi: divisiController.text,
         username: usernameController.text,
+        divisiid: 0,
         password: passwordController.text,
-      );
-      if (user) {
-        Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => HomePage()),
-            (route) => false);
+      )) {
+        Navigator.pushNamed(context, '/sign-in');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.green,
+            content: Text(
+              'Registrasi berhasil!',
+              textAlign: TextAlign.center,
+            ),
+          ),
+        );
       } else {
+        // Navigator.pushNamed(context, '/sign-up');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             backgroundColor: Colors.red,
             content: Text(
-              'Username atau password salah',
+              'Gagal Registrasi, username sudah ada.',
               textAlign: TextAlign.center,
             ),
           ),
@@ -70,7 +123,7 @@ class _SignInPageState extends State<SignInPage> {
         return Container(
           margin: EdgeInsets.only(bottom: 30),
           child: Text(
-            'Masuk',
+            'Daftar',
             textAlign: TextAlign.center,
             style: textTextStyle.copyWith(
               fontSize: 24,
@@ -79,10 +132,35 @@ class _SignInPageState extends State<SignInPage> {
         );
       }
 
-      Widget emailInput() {
+      Widget namaInput() {
+        return CustomTextFormField(
+          title: 'Nama lengkap',
+          hintText: 'Nama lengkap',
+          controller: nameController,
+        );
+      }
+
+      Widget nipInput() {
+        return CustomTextFormField(
+          title: 'Nip',
+          hintText: 'Nip',
+          controller: nipController,
+          keyboard: TextInputType.number,
+        );
+      }
+
+      Widget divisiInput() {
+        return CustomTextFormField(
+          title: 'Divisi',
+          hintText: 'Divisi',
+          controller: divisiController,
+        );
+      }
+
+      Widget usernameInput() {
         return CustomTextFormField(
           title: 'Username',
-          hintText: 'Your username',
+          hintText: 'Username',
           controller: usernameController,
         );
       }
@@ -140,20 +218,19 @@ class _SignInPageState extends State<SignInPage> {
                     color: whiteColor,
                   )
                 : Text(
-                    'Masuk',
+                    'Daftar',
                     style: whiteTextStyle.copyWith(
                       fontSize: 18,
                       fontWeight: medium,
                     ),
                   ),
             width: double.infinity,
-            onPressed: handleSignIn,
+            onPressed: handleSignUp,
           ),
         );
       }
 
       return Container(
-        margin: EdgeInsets.only(top: 30),
         padding: EdgeInsets.symmetric(
           horizontal: 20,
           vertical: 30,
@@ -166,7 +243,10 @@ class _SignInPageState extends State<SignInPage> {
         child: Column(
           children: [
             title(),
-            emailInput(),
+            namaInput(),
+            nipInput(),
+            divisiInput(),
+            usernameInput(),
             passwordInput(),
             SizedBox(
               height: 20,
@@ -182,13 +262,13 @@ class _SignInPageState extends State<SignInPage> {
       );
     }
 
-    Widget signUpButton() {
+    Widget signInButton() {
       return TextButton(
           onPressed: () {
-            Navigator.pushNamed(context, '/sign-up');
+            Navigator.pop(context);
           },
           child: Text(
-            'belum memiliki akun? daftar',
+            'sudah memiliki akun? masuk',
             style: textTextStyle,
           ));
     }
@@ -198,48 +278,12 @@ class _SignInPageState extends State<SignInPage> {
         child: ListView(
           children: [
             inputSection(),
-            Spacer(),
-            signUpButton(),
-            SizedBox(height: 40),
+            SizedBox(height: 20),
+            signInButton(),
+            SizedBox(height: 20),
           ],
         ),
       ),
     );
-  }
-
-  Widget buildAuthenticate(BuildContext context) => buildButton(
-        onPressed: () async {
-          final isAuthenticated = await LocalAuthApi.authenticate();
-
-          if (isAuthenticated) {
-            Navigator.of(context).pushReplacementNamed('/home');
-          }
-        },
-      );
-
-  Widget buildButton({
-    required VoidCallback onPressed,
-  }) =>
-      Container(
-        width: 70,
-        child: TextButton(
-          style: TextButton.styleFrom(
-            backgroundColor: Colors.grey,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-          ),
-          onPressed: onPressed,
-          child: Icon(
-            Icons.fingerprint,
-            color: whiteColor,
-            size: 30,
-          ),
-        ),
-      );
-
-  Future<void> fingerprintButton() async {
-    // SharedPreferences prefs = await SharedPreferences.getInstance();
-    // prefs.remove(SignInPage.user);
   }
 }

@@ -1,110 +1,110 @@
 class AbsenModel {
   // ignore: non_constant_identifier_names
-  final int? absIdents;
-  final String? absNipas;
-  final String? absDivisi;
-  final int? absStatus;
-  final int? absAlasan;
-  final int? absTransportasi;
-  final int? absKondisi;
-  final int? absJenis;
-  final double? absLatitude;
-  final double? absLongitude;
-  final int? absDoc;
-  final String? absDocName;
-  final String? absDocType;
-  final int? absDocSize;
-  final String? absDocMime;
-  final String? absUsrnam;
-  final String? absUsrdat;
-  final String? absSuhu;
-  final String? absAddress;
-  final String? absOther;
+  final int? id;
+  final String? nipas;
+  final String? divisi;
+  final int? status;
+  final int? alasan;
+  final int? transportasi;
+  final int? kondisi;
+  final int? jenis;
+  final double? latitude;
+  final double? longitude;
+  final int? doc;
+  final String? docName;
+  final String? docType;
+  final int? docSize;
+  final String? docMime;
+  final String? username;
+  final String? userdate;
+  final String? suhu;
+  final String? address;
+  final String? other;
   final int? divisiid;
-  final String? absZona;
-  final String? absDateAbsen;
-  final String? absKegiatan;
+  final String? zona;
+  final String? dateAbsen;
+  final String? kegiatan;
 
   AbsenModel(
-      {this.absIdents,
-      required this.absNipas,
-      required this.absDivisi,
-      required this.absStatus,
-      required this.absAlasan,
-      this.absTransportasi,
-      this.absKondisi,
-      required this.absJenis,
-      this.absLatitude,
-      this.absLongitude,
-      this.absDoc,
-      this.absDocName,
-      this.absDocType,
-      this.absDocSize,
-      this.absDocMime,
-      this.absUsrnam,
-      this.absUsrdat,
-      this.absSuhu,
-      this.absAddress,
-      this.absOther,
+      {this.id,
+      required this.nipas,
+      required this.divisi,
+      required this.status,
+      required this.alasan,
+      this.transportasi,
+      this.kondisi,
+      required this.jenis,
+      this.latitude,
+      this.longitude,
+      this.doc,
+      this.docName,
+      this.docType,
+      this.docSize,
+      this.docMime,
+      this.username,
+      this.userdate,
+      this.suhu,
+      this.address,
+      this.other,
       this.divisiid,
-      this.absZona,
-      this.absDateAbsen,
-      this.absKegiatan});
+      this.zona,
+      this.dateAbsen,
+      this.kegiatan});
 
-  factory AbsenModel.fromJson(Map<String, dynamic> json) {
+  factory AbsenModel.fromJson(Map<dynamic, dynamic> json) {
     return AbsenModel(
-        absIdents: json["abs_idents"],
-        absNipas: json["abs_nipas"],
-        absDivisi: json["abs_divisi"],
-        absStatus: json["abs_status"],
-        absAlasan: json["abs_alasan"],
-        absTransportasi: json["abs_transportasi"],
-        absKondisi: json["abs_kondisi"],
-        absJenis: json["abs_jenis"],
-        absLatitude: json["abs_latitude"],
-        absLongitude: json["abs_longitude"],
-        absDoc: json["abs_doc"],
-        absDocName: json["abs_doc_name"],
-        absDocType: json["abs_doc_type"],
-        absDocSize: json["abs_doc_size"],
-        absDocMime: json["abs_doc_mime"],
-        absUsrnam: json["abs_usrnam"],
-        absUsrdat: json["abs_usrdat"],
-        absSuhu: json["abs_suhu"],
-        absAddress: json["abs_address"],
-        absOther: json["abs_other"],
+        id: json["id"],
+        nipas: json["nipas"],
+        divisi: json["divisi"],
+        status: json["status"],
+        alasan: json["alasan"],
+        transportasi: json["transportasi"],
+        kondisi: json["kondisi"],
+        jenis: json["jenis"],
+        latitude: json["latitude"],
+        longitude: json["longitude"],
+        doc: json["doc"],
+        docName: json["doc_name"],
+        docType: json["doc_type"],
+        docSize: json["doc_size"],
+        docMime: json["doc_mime"],
+        username: json["username"],
+        userdate: json["userdate"],
+        suhu: json["suhu"],
+        address: json["address"],
+        other: json["other"],
         divisiid: json["divisiid"],
-        absZona: json["abs_zona"],
-        absDateAbsen: json["abs_date_absen"],
-        absKegiatan: json["abs_kegiatan"]);
+        zona: json["zona"],
+        dateAbsen: json["date_absen"],
+        kegiatan: json["kegiatan"]);
   }
 
   Map<String, dynamic> toJson() {
     return {
-      "abs_idents": absIdents,
-      "abs_nipas": absNipas,
-      "abs_divisi": absDivisi,
-      "abs_status": absStatus,
-      "abs_alasan": absAlasan,
-      "abs_transportasi": absTransportasi,
-      "abs_kondisi": absKondisi,
-      "abs_jenis": absJenis,
-      "abs_latitude": absLatitude,
-      "abs_longitude": absLongitude,
-      "abs_doc": absDoc,
-      "abs_doc_name": absDocName,
-      "abs_doc_type": absDocType,
-      "abs_doc_size": absDocSize,
-      "abs_doc_mime": absDocMime,
-      "abs_usrnam": absUsrnam,
-      "abs_usrdat": absUsrdat,
-      "abs_suhu": absSuhu,
-      "abs_address": absAddress,
-      "abs_other": absOther,
+      "id": id,
+      "nipas": nipas,
+      "divisi": divisi,
+      "status": status!,
+      "alasan": alasan!,
+      "transportasi": transportasi!.toInt(),
+      "kondisi": kondisi!.toInt(),
+      "jenis": jenis!.toInt(),
+      "latitude": latitude,
+      "longitude": longitude,
+      "doc": doc,
+      "doc_name": docName,
+      "doc_type": docType,
+      "doc_size": docSize,
+      "doc_mime": docMime,
+      "username": username,
+      "userdate": userdate,
+      "suhu": suhu,
+      "address": address,
+      "other": other,
       "divisiid": divisiid,
-      "abs_zona": absZona,
-      "abs_date_absen": absDateAbsen,
-      "abs_kegiatan": absKegiatan
+      "zona": zona,
+      "date_absen": dateAbsen,
+      "kegiatan": kegiatan
     };
   }
 }

@@ -1,15 +1,11 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:aad_oauth/aad_oauth.dart';
 import 'package:aplikasi_asabri_nullsafety/common/theme.dart';
 import 'package:aplikasi_asabri_nullsafety/data/api/api_service.dart';
 import 'package:aplikasi_asabri_nullsafety/data/models/Absen_model.dart';
-import 'package:aplikasi_asabri_nullsafety/data/models/Request_model.dart';
 import 'package:aplikasi_asabri_nullsafety/data/models/User_model.dart';
-import 'package:aplikasi_asabri_nullsafety/main.dart';
-import 'package:aplikasi_asabri_nullsafety/pages/sign_in_page.dart';
+import 'package:aplikasi_asabri_nullsafety/provider/auth_provider.dart';
 import 'package:aplikasi_asabri_nullsafety/provider/preferences_provider.dart';
-import 'package:aplikasi_asabri_nullsafety/widget/custom_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geocoding/geocoding.dart';
@@ -33,12 +29,6 @@ class AbsenPage extends StatefulWidget {
 }
 
 class _AbsenPageState extends State<AbsenPage> {
-  final AadOAuth oauth = AadOAuth(MyApp.config);
-
-  void logout() async {
-    await oauth.logout();
-  }
-
   XFile? _picture;
   File? imageFile;
   int statusKerja = 0;
@@ -46,6 +36,9 @@ class _AbsenPageState extends State<AbsenPage> {
   int keKantorMenggunakan = 0;
   int kondisiKesehatan = 0;
   int jenisAbsen = 0;
+  int kegiatanLibur = 0;
+  int jenisCuti = 0;
+  int lokasiCuti = 0;
   double latitude = 0;
   double longitude = 0;
   String alamat = "";
@@ -65,7 +58,7 @@ class _AbsenPageState extends State<AbsenPage> {
   LatLng? latLng;
 
   late Future<User> user;
-  late Future<RequestModel> response;
+  late Future<User> response;
   ApiService? _apiService;
   static bool _isLoading = false;
 
@@ -207,13 +200,31 @@ class _AbsenPageState extends State<AbsenPage> {
     });
   }
 
+  void _kegiatanLibur(int value) {
+    setState(() {
+      kegiatanLibur = value;
+    });
+  }
+
+  void _jenisCuti(int value) {
+    setState(() {
+      jenisCuti = value;
+    });
+  }
+
+  void _lokasiCuti(int value) {
+    setState(() {
+      lokasiCuti = value;
+    });
+  }
+
   @override
   void initState() {
     _determinePosition();
     googleMaps();
-    response = ApiService().fetchSharp(context, SignInPage.accessToken!);
     _apiService = ApiService();
     initPlatformState();
+
     super.initState();
   }
 
@@ -229,36 +240,43 @@ class _AbsenPageState extends State<AbsenPage> {
     return Consumer<PreferencesProvider>(
       builder: (context, provider, child) {
         return Scaffold(
-            resizeToAvoidBottomInset: false,
-            appBar: AppBar(
-              centerTitle: true,
-              automaticallyImplyLeading: false,
-              title: Text(
-                AbsenPage.absenTitle,
-                style: whiteTextStyle,
-              ),
+          resizeToAvoidBottomInset: false,
+          appBar: AppBar(
+            centerTitle: true,
+            automaticallyImplyLeading: false,
+            title: Text(
+              AbsenPage.absenTitle,
+              style: whiteTextStyle,
             ),
-            body: FutureBuilder<RequestModel>(
-              future: response,
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  if (snapshot.data!.isSucces) {
-                    return Container(
-                      margin: EdgeInsets.only(
-                        right: 30,
-                        left: 30,
-                      ),
-                      child: Form(
-                        key: _formKey,
-                        child: SingleChildScrollView(
-                          child: Column(
-                            children: [
-                              costumTextForm(
-                                snapshot.data!.data!.nama!,
-                                snapshot.data!.data!.nipas,
-                                snapshot.data!.data!.divisi,
-                              ),
-                              radioListSK(
+          ),
+          body: Consumer<AuthProvider>(
+            builder: (context, user, child) {
+              return Container(
+                margin: EdgeInsets.only(
+                  right: 30,
+                  left: 30,
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        costumTextForm(
+                          user.user.user.name,
+                          user.user.user.nip,
+                          user.user.user.divisi,
+                        ),
+
+                        radioListSK(
+                          provider.isDarkTheme ? greyTextStyle : textTextStyle,
+                          provider.isDarkTheme
+                              ? greyTextStyle.copyWith(fontWeight: semiBold)
+                              : textTextStyle.copyWith(fontWeight: semiBold),
+                          provider.isDarkTheme ? greyColor : textColor,
+                        ),
+                        //* Radio button WFH
+                        statusKerja == 1
+                            ? radioListWFH(
                                 provider.isDarkTheme
                                     ? greyTextStyle
                                     : textTextStyle,
@@ -268,227 +286,461 @@ class _AbsenPageState extends State<AbsenPage> {
                                     : textTextStyle.copyWith(
                                         fontWeight: semiBold),
                                 provider.isDarkTheme ? greyColor : textColor,
-                              ),
-                              statusKerja == 1
-                                  ? radioListWFH(
-                                      provider.isDarkTheme
-                                          ? greyTextStyle
-                                          : textTextStyle,
-                                      provider.isDarkTheme
-                                          ? greyTextStyle.copyWith(
-                                              fontWeight: semiBold)
-                                          : textTextStyle.copyWith(
-                                              fontWeight: semiBold),
-                                      provider.isDarkTheme
-                                          ? greyColor
-                                          : textColor,
-                                    )
-                                  : SizedBox(),
-                              statusKerja != 0
-                                  ? radioListKeKantor(
-                                      provider.isDarkTheme
-                                          ? greyTextStyle
-                                          : textTextStyle,
-                                      provider.isDarkTheme
-                                          ? greyTextStyle.copyWith(
-                                              fontWeight: semiBold)
-                                          : textTextStyle.copyWith(
-                                              fontWeight: semiBold),
-                                      provider.isDarkTheme
-                                          ? greyColor
-                                          : textColor,
-                                    )
-                                  : SizedBox(),
-                              keKantorMenggunakan != 0
-                                  ? radioListKondisiKesehatan(
-                                      provider.isDarkTheme
-                                          ? greyTextStyle
-                                          : textTextStyle,
-                                      provider.isDarkTheme
-                                          ? greyTextStyle.copyWith(
-                                              fontWeight: semiBold)
-                                          : textTextStyle.copyWith(
-                                              fontWeight: semiBold),
-                                      provider.isDarkTheme
-                                          ? greyColor
-                                          : textColor,
-                                    )
-                                  : SizedBox(),
-                              kondisiKesehatan != 0
-                                  ? radioListJenisAbsen(
-                                      provider.isDarkTheme
-                                          ? greyTextStyle
-                                          : textTextStyle,
-                                      provider.isDarkTheme
-                                          ? greyTextStyle.copyWith(
-                                              fontWeight: semiBold)
-                                          : textTextStyle.copyWith(
-                                              fontWeight: semiBold),
-                                      provider.isDarkTheme
-                                          ? greyColor
-                                          : textColor,
-                                    )
-                                  : SizedBox(),
-                              location(
+                              )
+                            : SizedBox(),
+                        alasanWFH != 0
+                            ? radioListKondisiKesehatan(
+                                provider.isDarkTheme
+                                    ? greyTextStyle
+                                    : textTextStyle,
                                 provider.isDarkTheme
                                     ? greyTextStyle.copyWith(
                                         fontWeight: semiBold)
                                     : textTextStyle.copyWith(
                                         fontWeight: semiBold),
                                 provider.isDarkTheme ? greyColor : textColor,
-                              ),
-                              insertImage(context),
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  minimumSize: Size(double.infinity, 50),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(4),
+                              )
+                            : SizedBox(),
+                        //* Radio button WFO
+                        statusKerja == 2
+                            ? radioListKeKantor(
+                                provider.isDarkTheme
+                                    ? greyTextStyle
+                                    : textTextStyle,
+                                provider.isDarkTheme
+                                    ? greyTextStyle.copyWith(
+                                        fontWeight: semiBold)
+                                    : textTextStyle.copyWith(
+                                        fontWeight: semiBold),
+                                provider.isDarkTheme ? greyColor : textColor,
+                              )
+                            : SizedBox(),
+                        keKantorMenggunakan != 0
+                            ? radioListKondisiKesehatan(
+                                provider.isDarkTheme
+                                    ? greyTextStyle
+                                    : textTextStyle,
+                                provider.isDarkTheme
+                                    ? greyTextStyle.copyWith(
+                                        fontWeight: semiBold)
+                                    : textTextStyle.copyWith(
+                                        fontWeight: semiBold),
+                                provider.isDarkTheme ? greyColor : textColor,
+                              )
+                            : SizedBox(),
+                        //* Radio button tidak kerja
+                        statusKerja == 3 ||
+                                statusKerja == 4 ||
+                                statusKerja == 5 ||
+                                statusKerja == 6 ||
+                                statusKerja == 7
+                            ? radioListKondisiKesehatan(
+                                provider.isDarkTheme
+                                    ? greyTextStyle
+                                    : textTextStyle,
+                                provider.isDarkTheme
+                                    ? greyTextStyle.copyWith(
+                                        fontWeight: semiBold)
+                                    : textTextStyle.copyWith(
+                                        fontWeight: semiBold),
+                                provider.isDarkTheme ? greyColor : textColor,
+                              )
+                            : SizedBox(),
+                        kondisiKesehatan == 1 &&
+                                statusKerja != 3 &&
+                                statusKerja != 4 &&
+                                statusKerja != 5 &&
+                                statusKerja != 6 &&
+                                statusKerja != 7
+                            ? radioListJenisAbsen(
+                                provider.isDarkTheme
+                                    ? greyTextStyle
+                                    : textTextStyle,
+                                provider.isDarkTheme
+                                    ? greyTextStyle.copyWith(
+                                        fontWeight: semiBold)
+                                    : textTextStyle.copyWith(
+                                        fontWeight: semiBold),
+                                provider.isDarkTheme ? greyColor : textColor,
+                              )
+                            : SizedBox(),
+                        kondisiKesehatan == 2 &&
+                                statusKerja != 3 &&
+                                statusKerja != 4 &&
+                                statusKerja != 5 &&
+                                statusKerja != 6 &&
+                                statusKerja != 7
+                            ? Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Suhu Tubuh (Celcius)?',
+                                    style: textTextStyle.copyWith(
+                                        fontWeight: bold),
                                   ),
-                                ),
-                                onPressed: () async {
-                                  if (canMockLocation) {
-                                    _isLoading = true;
-                                    customDialog(
-                                      context,
-                                      'Peringatan!!!',
-                                      'Matikan fake location.',
-                                    );
-                                    _isLoading = false;
-                                  } else if (statusKerja == 0) {
-                                    _isLoading = true;
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          'Mohon isi status kerja',
-                                          textAlign: TextAlign.center,
-                                        ),
-                                        backgroundColor: Colors.amber,
+                                  Container(
+                                    width: double.infinity,
+                                    height: 25,
+                                    margin: EdgeInsets.only(
+                                      left: 30,
+                                      top: 10,
+                                      bottom: 20,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: Colors.black,
+                                        width: 1,
                                       ),
-                                    );
-                                    _isLoading = false;
-                                  } else if (jenisAbsen == 0) {
-                                    _isLoading = true;
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          'Mohon isi jenis absen',
-                                          textAlign: TextAlign.center,
-                                        ),
-                                        backgroundColor: Colors.amber,
+                                    ),
+                                  ),
+                                  radioListJenisAbsen(
+                                    provider.isDarkTheme
+                                        ? greyTextStyle
+                                        : textTextStyle,
+                                    provider.isDarkTheme
+                                        ? greyTextStyle.copyWith(
+                                            fontWeight: semiBold)
+                                        : textTextStyle.copyWith(
+                                            fontWeight: semiBold),
+                                    provider.isDarkTheme
+                                        ? greyColor
+                                        : textColor,
+                                  )
+                                ],
+                              )
+                            : SizedBox(),
+                        kondisiKesehatan == 3 &&
+                                statusKerja != 3 &&
+                                statusKerja != 4 &&
+                                statusKerja != 5 &&
+                                statusKerja != 6 &&
+                                statusKerja != 7
+                            ? Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Keterangan?',
+                                    style: textTextStyle.copyWith(
+                                        fontWeight: bold),
+                                  ),
+                                  Container(
+                                    width: double.infinity,
+                                    height: 70,
+                                    margin: EdgeInsets.only(
+                                      left: 30,
+                                      top: 10,
+                                      bottom: 20,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: Colors.black,
+                                        width: 1,
                                       ),
-                                    );
-                                    _isLoading = false;
-                                  } else {
-                                    _isLoading = true;
-                                    _formKey.currentState!.save();
-
-                                    nipas = snapshot.data!.data!.nipas;
-                                    divisi = snapshot.data!.data!.divisi;
-                                    username = snapshot.data!.data!.username;
-                                    divisiid = snapshot.data!.data!.divisiid;
-                                    var docName =
-                                        _picture == null ? '' : _picture!.name;
-                                    var docSize = _picture == null
-                                        ? 0
-                                        : await _picture!.length();
-                                    DateFormat dateFormat =
-                                        DateFormat("yyyy-MM-dd HH:mm:ss");
-
-                                    AbsenModel absen = AbsenModel(
-                                      absNipas: nipas,
-                                      absDivisi: divisi,
-                                      absStatus: statusKerja,
-                                      absAlasan: alasanWFH,
-                                      absTransportasi: keKantorMenggunakan,
-                                      absKondisi: kondisiKesehatan,
-                                      absJenis: jenisAbsen,
-                                      absLatitude: latitude,
-                                      absLongitude: longitude,
-                                      absDocName: docName,
-                                      absDocSize: docSize,
-                                      absUsrnam: username,
-                                      absUsrdat:
-                                          dateFormat.format(DateTime.now()),
-                                      absSuhu: '',
-                                      absAddress: currentAddress,
-                                      absOther: '',
-                                      divisiid: divisiid,
-                                      absZona: '',
-                                      absDateAbsen:
-                                          dateFormat.format(DateTime.now()),
-                                      absKegiatan: '',
-                                    );
-
-                                    _apiService!.saveWithImage(
-                                      absen,
-                                      SignInPage.accessToken!,
-                                      imageFile,
-                                    );
-
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          'terimakasih  telah melakukan absen',
-                                        ),
-                                        backgroundColor: greenColor,
+                                    ),
+                                  ),
+                                  radioListJenisAbsen(
+                                    provider.isDarkTheme
+                                        ? greyTextStyle
+                                        : textTextStyle,
+                                    provider.isDarkTheme
+                                        ? greyTextStyle.copyWith(
+                                            fontWeight: semiBold)
+                                        : textTextStyle.copyWith(
+                                            fontWeight: semiBold),
+                                    provider.isDarkTheme
+                                        ? greyColor
+                                        : textColor,
+                                  )
+                                ],
+                              )
+                            : SizedBox(),
+                        //* Radio button covid (Kesehatan)
+                        (kondisiKesehatan == 1 && statusKerja == 3) ||
+                                (kondisiKesehatan == 1 && statusKerja == 4) ||
+                                (kondisiKesehatan == 1 && statusKerja == 5) ||
+                                (kondisiKesehatan == 1 && statusKerja == 6) ||
+                                (kondisiKesehatan == 1 && statusKerja == 7)
+                            ? SizedBox()
+                            : SizedBox(),
+                        (kondisiKesehatan == 2 && statusKerja == 3) ||
+                                (kondisiKesehatan == 2 && statusKerja == 4) ||
+                                (kondisiKesehatan == 2 && statusKerja == 5) ||
+                                (kondisiKesehatan == 2 && statusKerja == 6) ||
+                                (kondisiKesehatan == 2 && statusKerja == 7)
+                            ? Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Suhu Tubuh (Celcius)?',
+                                    style: textTextStyle.copyWith(
+                                        fontWeight: bold),
+                                  ),
+                                  Container(
+                                    width: double.infinity,
+                                    height: 25,
+                                    margin: EdgeInsets.only(
+                                      left: 30,
+                                      top: 10,
+                                      bottom: 20,
+                                    ),
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 5,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: Colors.black,
+                                        width: 1,
                                       ),
-                                    );
-                                    _isLoading = false;
-                                    Navigator.pushNamed(context, '/home');
-                                  }
-                                },
-                                child: _isLoading
-                                    ? Center(
-                                        child: CircularProgressIndicator(
-                                          color: whiteColor,
-                                        ),
-                                      )
-                                    : Text(
-                                        'submit',
-                                        style: whiteTextStyle.copyWith(
-                                            fontSize: 16),
+                                    ),
+                                    child: TextField(
+                                        textAlign: TextAlign.end,
+                                        decoration: InputDecoration.collapsed(
+                                            hintText: ''),
+                                        cursorColor: textColor,
+                                        keyboardType: TextInputType.number),
+                                  ),
+                                ],
+                              )
+                            : SizedBox(),
+                        (kondisiKesehatan == 3 && statusKerja == 3) ||
+                                (kondisiKesehatan == 3 && statusKerja == 4) ||
+                                (kondisiKesehatan == 3 && statusKerja == 5) ||
+                                (kondisiKesehatan == 3 && statusKerja == 6) ||
+                                (kondisiKesehatan == 3 && statusKerja == 7)
+                            ? Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Keterangan?',
+                                    style: textTextStyle.copyWith(
+                                        fontWeight: bold),
+                                  ),
+                                  Container(
+                                    width: double.infinity,
+                                    height: 80,
+                                    margin: EdgeInsets.only(
+                                      left: 30,
+                                      top: 10,
+                                      bottom: 20,
+                                    ),
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 5,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: Colors.black,
+                                        width: 1,
                                       ),
-                              ),
-                              SizedBox(
-                                height: 20,
-                              ),
-                            ],
-                          ),
+                                    ),
+                                    child: TextField(
+                                      decoration: InputDecoration.collapsed(
+                                          hintText: 'Keterangan'),
+                                      cursorColor: textColor,
+                                      keyboardType: TextInputType.multiline,
+                                      textInputAction: TextInputAction.newline,
+                                      minLines: 1,
+                                      maxLines: 5,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : SizedBox(),
+                        statusKerja == 6 && kondisiKesehatan != 0
+                            ? radioListJenisCuti(
+                                provider.isDarkTheme
+                                    ? greyTextStyle
+                                    : textTextStyle,
+                                provider.isDarkTheme
+                                    ? greyTextStyle.copyWith(
+                                        fontWeight: semiBold)
+                                    : textTextStyle.copyWith(
+                                        fontWeight: semiBold),
+                                provider.isDarkTheme ? greyColor : textColor,
+                              )
+                            : SizedBox(),
+                        statusKerja == 6 && jenisCuti != 0
+                            ? radioListLokasiCuti(
+                                provider.isDarkTheme
+                                    ? greyTextStyle
+                                    : textTextStyle,
+                                provider.isDarkTheme
+                                    ? greyTextStyle.copyWith(
+                                        fontWeight: semiBold)
+                                    : textTextStyle.copyWith(
+                                        fontWeight: semiBold),
+                                provider.isDarkTheme ? greyColor : textColor,
+                              )
+                            : SizedBox(),
+                        (statusKerja == 7 && kondisiKesehatan != 0) ||
+                                (statusKerja == 6 && lokasiCuti != 0)
+                            ? radioListKegiatanLibur(
+                                provider.isDarkTheme
+                                    ? greyTextStyle
+                                    : textTextStyle,
+                                provider.isDarkTheme
+                                    ? greyTextStyle.copyWith(
+                                        fontWeight: semiBold)
+                                    : textTextStyle.copyWith(
+                                        fontWeight: semiBold),
+                                provider.isDarkTheme ? greyColor : textColor,
+                              )
+                            : SizedBox(),
+                        kegiatanLibur == 4
+                            ? Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Keterangan Kegiatan?',
+                                    style: textTextStyle.copyWith(
+                                        fontWeight: bold),
+                                  ),
+                                  Container(
+                                    width: double.infinity,
+                                    height: 80,
+                                    margin: EdgeInsets.only(
+                                      left: 30,
+                                      top: 10,
+                                      bottom: 20,
+                                    ),
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 5,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: Colors.black,
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: TextField(
+                                      decoration: InputDecoration.collapsed(
+                                          hintText: 'Keterangan'),
+                                      cursorColor: textColor,
+                                      keyboardType: TextInputType.multiline,
+                                      textInputAction: TextInputAction.newline,
+                                      minLines: 1,
+                                      maxLines: 5,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : SizedBox(),
+                        location(
+                          provider.isDarkTheme
+                              ? greyTextStyle.copyWith(fontWeight: semiBold)
+                              : textTextStyle.copyWith(fontWeight: semiBold),
+                          provider.isDarkTheme ? greyColor : textColor,
                         ),
-                      ),
-                    );
-                  } else {
-                    showError();
-                  }
-                } else if (snapshot.hasError) {
-                  return Center(child: Text(snapshot.error.toString()));
-                }
-                return Center(
-                  child: CircularProgressIndicator(
-                    color: provider.isDarkTheme ? whiteColor : textColor,
+                        statusKerja == 1 ? insertImage(context) : SizedBox(),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            minimumSize: Size(double.infinity, 50),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                          onPressed: () async {
+                            if (statusKerja == 0) {
+                              _isLoading = true;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Mohon isi status kerja',
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  backgroundColor: Colors.amber,
+                                ),
+                              );
+                              _isLoading = false;
+                            } else if (statusKerja == 1 && _picture == null) {
+                              _isLoading = true;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Mohon tambahkan foto selfie',
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  backgroundColor: Colors.amber,
+                                ),
+                              );
+                              _isLoading = false;
+                            } else {
+                              _isLoading = true;
+                              _formKey.currentState!.save();
+                              var docName =
+                                  _picture == null ? '' : _picture!.name;
+                              var docSize = _picture == null
+                                  ? 0
+                                  : await _picture!.length();
+                              DateFormat dateFormat =
+                                  DateFormat("yyyy-MM-dd HH:mm:ss");
+
+                              AbsenModel absen = AbsenModel(
+                                nipas: user.user.user.nip,
+                                divisi: user.user.user.divisi,
+                                status: statusKerja,
+                                alasan: alasanWFH,
+                                transportasi: keKantorMenggunakan,
+                                kondisi: kondisiKesehatan,
+                                jenis: jenisAbsen,
+                                latitude: latitude,
+                                longitude: longitude,
+                                docName: docName,
+                                docSize: docSize,
+                                username: user.user.user.username,
+                                userdate: dateFormat.format(DateTime.now()),
+                                suhu: '',
+                                address: currentAddress,
+                                other: '',
+                                divisiid: divisiid,
+                                zona: '',
+                                dateAbsen: dateFormat.format(DateTime.now()),
+                                kegiatan: '',
+                              );
+
+                              _apiService!.saveWithImage(
+                                absen,
+                                imageFile,
+                              );
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'terimakasih telah melakukan absen',
+                                  ),
+                                  backgroundColor: greenColor,
+                                ),
+                              );
+                              _isLoading = false;
+                              Navigator.pushNamed(context, '/home');
+                            }
+                          },
+                          child: _isLoading
+                              ? Center(
+                                  child: CircularProgressIndicator(
+                                    color: whiteColor,
+                                  ),
+                                )
+                              : Text(
+                                  'submit',
+                                  style: whiteTextStyle.copyWith(fontSize: 16),
+                                ),
+                        ),
+                        SizedBox(
+                          height: 20,
+                        ),
+                      ],
+                    ),
                   ),
-                );
-              },
-            ));
+                ),
+              );
+            },
+          ),
+        );
       },
     );
-  }
-
-  showError() async {
-    await Future.delayed(Duration(microseconds: 1));
-    showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) {
-          Timer(Duration(seconds: 3), () {
-            logout();
-            Navigator.pushNamed(context, '/blank');
-          });
-          return AlertDialog(
-            title: Text("Peringatan"),
-            content: Text("Mohon maaf user anda tidak terdaftar!"),
-          );
-        });
   }
 
   Row insertImage(BuildContext context) {
@@ -636,6 +888,188 @@ class _AbsenPageState extends State<AbsenPage> {
     );
   }
 
+  Column radioListLokasiCuti(
+      TextStyle style, TextStyle styleHead, Color color) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Lokasi Cuti',
+          style: styleHead,
+        ),
+        new RadioListTile(
+          value: 1,
+          title: new Text(
+            "Sesuai Domisili",
+            style: style,
+          ),
+          groupValue: lokasiCuti,
+          onChanged: (int? value) {
+            _lokasiCuti(value!);
+          },
+          activeColor: color,
+        ),
+        new RadioListTile(
+          value: 2,
+          title: new Text(
+            "Luar Kota",
+            style: style,
+          ),
+          groupValue: lokasiCuti,
+          onChanged: (int? value) {
+            _lokasiCuti(value!);
+          },
+          activeColor: color,
+        ),
+      ],
+    );
+  }
+
+  Column radioListJenisCuti(TextStyle style, TextStyle styleHead, Color color) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Jenis Cuti?',
+          style: styleHead,
+        ),
+        new RadioListTile(
+          value: 1,
+          title: new Text(
+            "Cuti Tahunan",
+            style: style,
+          ),
+          groupValue: jenisCuti,
+          onChanged: (int? value) {
+            _jenisCuti(value!);
+          },
+          activeColor: color,
+        ),
+        new RadioListTile(
+          value: 2,
+          title: new Text(
+            "Cuti Besar",
+            style: style,
+          ),
+          groupValue: jenisCuti,
+          onChanged: (int? value) {
+            _jenisCuti(value!);
+          },
+          activeColor: color,
+        ),
+        new RadioListTile(
+          value: 3,
+          title: new Text(
+            "Cuti Sakit",
+            style: style,
+          ),
+          groupValue: jenisCuti,
+          onChanged: (int? value) {
+            _jenisCuti(value!);
+          },
+          activeColor: color,
+        ),
+        new RadioListTile(
+          value: 4,
+          title: new Text(
+            "Cuti Bersalin",
+            style: style,
+          ),
+          groupValue: jenisCuti,
+          onChanged: (int? value) {
+            _jenisCuti(value!);
+          },
+          activeColor: color,
+        ),
+        new RadioListTile(
+          value: 5,
+          title: new Text(
+            "Karena Alasan Khusus",
+            style: style,
+          ),
+          groupValue: jenisCuti,
+          onChanged: (int? value) {
+            _jenisCuti(value!);
+          },
+          activeColor: color,
+        ),
+        new RadioListTile(
+          value: 6,
+          title: new Text(
+            "Di Luar Tanggungan Perusahaan",
+            style: style,
+          ),
+          groupValue: jenisCuti,
+          onChanged: (int? value) {
+            _jenisCuti(value!);
+          },
+          activeColor: color,
+        ),
+      ],
+    );
+  }
+
+  Column radioListKegiatanLibur(
+      TextStyle style, TextStyle styleHead, Color color) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Kegiatan?',
+          style: styleHead,
+        ),
+        new RadioListTile(
+          value: 1,
+          title: new Text(
+            "Di Rumah",
+            style: style,
+          ),
+          groupValue: kegiatanLibur,
+          onChanged: (int? value) {
+            _kegiatanLibur(value!);
+          },
+          activeColor: color,
+        ),
+        new RadioListTile(
+          value: 2,
+          title: new Text(
+            "Mengunjungi Keluarga",
+            style: style,
+          ),
+          groupValue: kegiatanLibur,
+          onChanged: (int? value) {
+            _kegiatanLibur(value!);
+          },
+          activeColor: color,
+        ),
+        new RadioListTile(
+          value: 3,
+          title: new Text(
+            "Berlibur di Dalam Kota",
+            style: style,
+          ),
+          groupValue: kegiatanLibur,
+          onChanged: (int? value) {
+            _kegiatanLibur(value!);
+          },
+          activeColor: color,
+        ),
+        new RadioListTile(
+          value: 4,
+          title: new Text(
+            "Kegiatan Lain",
+            style: style,
+          ),
+          groupValue: kegiatanLibur,
+          onChanged: (int? value) {
+            _kegiatanLibur(value!);
+          },
+          activeColor: color,
+        ),
+      ],
+    );
+  }
+
   Column radioListJenisAbsen(
       TextStyle style, TextStyle styleHead, Color color) {
     return Column(
@@ -646,6 +1080,7 @@ class _AbsenPageState extends State<AbsenPage> {
           style: styleHead,
         ),
         new RadioListTile(
+          toggleable: true,
           value: 1,
           title: new Text(
             "Masuk",
@@ -691,6 +1126,7 @@ class _AbsenPageState extends State<AbsenPage> {
           groupValue: kondisiKesehatan,
           onChanged: (int? value) {
             _kondisiKesehatan(value!);
+            _jenisAbsen(0);
           },
           activeColor: color,
         ),
@@ -703,6 +1139,7 @@ class _AbsenPageState extends State<AbsenPage> {
           groupValue: kondisiKesehatan,
           onChanged: (int? value) {
             _kondisiKesehatan(value!);
+            _jenisAbsen(0);
           },
           activeColor: color,
         ),
@@ -715,6 +1152,7 @@ class _AbsenPageState extends State<AbsenPage> {
           groupValue: kondisiKesehatan,
           onChanged: (int? value) {
             _kondisiKesehatan(value!);
+            _jenisAbsen(0);
           },
           activeColor: color,
         ),
@@ -835,6 +1273,13 @@ class _AbsenPageState extends State<AbsenPage> {
           groupValue: statusKerja,
           onChanged: (int? value) {
             _statusKerja(value!);
+            _alasanWFH(0);
+            _kondisiKesehatan(0);
+            _jenisAbsen(0);
+            _keKantorMenggunakan(0);
+            _kegiatanLibur(0);
+            _lokasiCuti(0);
+            _jenisCuti(0);
           },
           activeColor: color,
         ),
@@ -847,6 +1292,13 @@ class _AbsenPageState extends State<AbsenPage> {
           groupValue: statusKerja,
           onChanged: (int? value) {
             _statusKerja(value!);
+            _alasanWFH(0);
+            _kondisiKesehatan(0);
+            _jenisAbsen(0);
+            _keKantorMenggunakan(0);
+            _kegiatanLibur(0);
+            _lokasiCuti(0);
+            _jenisCuti(0);
           },
           activeColor: color,
         ),
@@ -859,6 +1311,13 @@ class _AbsenPageState extends State<AbsenPage> {
           groupValue: statusKerja,
           onChanged: (int? value) {
             _statusKerja(value!);
+            _alasanWFH(0);
+            _kondisiKesehatan(0);
+            _jenisAbsen(0);
+            _keKantorMenggunakan(0);
+            _kegiatanLibur(0);
+            _lokasiCuti(0);
+            _jenisCuti(0);
           },
           activeColor: color,
         ),
@@ -871,6 +1330,13 @@ class _AbsenPageState extends State<AbsenPage> {
           groupValue: statusKerja,
           onChanged: (int? value) {
             _statusKerja(value!);
+            _alasanWFH(0);
+            _kondisiKesehatan(0);
+            _jenisAbsen(0);
+            _keKantorMenggunakan(0);
+            _kegiatanLibur(0);
+            _lokasiCuti(0);
+            _jenisCuti(0);
           },
           activeColor: color,
         ),
@@ -883,6 +1349,13 @@ class _AbsenPageState extends State<AbsenPage> {
           groupValue: statusKerja,
           onChanged: (int? value) {
             _statusKerja(value!);
+            _alasanWFH(0);
+            _kondisiKesehatan(0);
+            _jenisAbsen(0);
+            _keKantorMenggunakan(0);
+            _kegiatanLibur(0);
+            _lokasiCuti(0);
+            _jenisCuti(0);
           },
           activeColor: color,
         ),
@@ -895,6 +1368,13 @@ class _AbsenPageState extends State<AbsenPage> {
           groupValue: statusKerja,
           onChanged: (int? value) {
             _statusKerja(value!);
+            _alasanWFH(0);
+            _kondisiKesehatan(0);
+            _jenisAbsen(0);
+            _keKantorMenggunakan(0);
+            _kegiatanLibur(0);
+            _lokasiCuti(0);
+            _jenisCuti(0);
           },
           activeColor: color,
         ),
@@ -907,6 +1387,13 @@ class _AbsenPageState extends State<AbsenPage> {
           groupValue: statusKerja,
           onChanged: (int? value) {
             _statusKerja(value!);
+            _alasanWFH(0);
+            _kondisiKesehatan(0);
+            _jenisAbsen(0);
+            _keKantorMenggunakan(0);
+            _kegiatanLibur(0);
+            _lokasiCuti(0);
+            _jenisCuti(0);
           },
           activeColor: color,
         ),
@@ -922,7 +1409,7 @@ class _AbsenPageState extends State<AbsenPage> {
           enabled: false,
           initialValue: name,
           decoration: InputDecoration(
-            labelText: 'Karyawan Asabri',
+            labelText: 'Karyawan',
             border: OutlineInputBorder(),
           ),
           maxLength: 30,
@@ -931,7 +1418,7 @@ class _AbsenPageState extends State<AbsenPage> {
           enabled: false,
           initialValue: nipas,
           decoration: InputDecoration(
-            labelText: 'NIPAS',
+            labelText: 'NIP',
             border: OutlineInputBorder(
               borderSide: BorderSide(
                 color: textColor,

@@ -1,8 +1,8 @@
-import 'package:aplikasi_asabri_nullsafety/common/theme.dart';
+
 import 'package:flutter/material.dart';
 
 class CustomButton extends StatelessWidget {
-  final String title;
+  final Widget title;
   final double width;
   final Function() onPressed;
   final EdgeInsets margin;
@@ -31,13 +31,7 @@ class CustomButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(24),
           ),
         ),
-        child: Text(
-          title,
-          style: whiteTextStyle.copyWith(
-            fontSize: 18,
-            fontWeight: medium,
-          ),
-        ),
+        child: title,
       ),
     );
   }

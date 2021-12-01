@@ -10,6 +10,8 @@ import 'package:aplikasi_asabri_nullsafety/pages/blank_page.dart';
 import 'package:aplikasi_asabri_nullsafety/pages/home_page.dart';
 import 'package:aplikasi_asabri_nullsafety/pages/rekap_page.dart';
 import 'package:aplikasi_asabri_nullsafety/pages/sign_in_page.dart';
+import 'package:aplikasi_asabri_nullsafety/pages/sign_up_page.dart';
+import 'package:aplikasi_asabri_nullsafety/provider/auth_provider.dart';
 import 'package:aplikasi_asabri_nullsafety/provider/preferences_provider.dart';
 import 'package:aplikasi_asabri_nullsafety/provider/scheduling_provider.dart';
 import 'package:aplikasi_asabri_nullsafety/utils/background_service.dart';
@@ -69,6 +71,9 @@ class MyApp extends StatelessWidget {
             ),
           ),
         ),
+        ChangeNotifierProvider(
+          create: (context) => AuthProvider(),
+        ),
       ],
       child: Consumer<PreferencesProvider>(
         builder: (context, provider, child) {
@@ -87,11 +92,12 @@ class MyApp extends StatelessWidget {
                 ),
               );
             },
-            initialRoute: '/blank',
+            initialRoute: '/sign-in',
             routes: {
               '/home': (context) => HomePage(),
               '/absen': (context) => AbsenPage(),
               '/sign-in': (context) => SignInPage(),
+              '/sign-up': (context) => SignUpPage(),
               '/rekap': (context) => RekapPage(),
               '/blank': (context) => BlankPage(),
             },

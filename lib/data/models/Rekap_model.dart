@@ -1,56 +1,55 @@
-class RekapAbsen {
-  RekapAbsen({
-    this.totalRows,
-    this.data,
+class HistoriModel {
+  HistoriModel({
+    required this.statuses,
+    required this.data,
   });
 
-  int? totalRows;
-  List<HistoriAbsen>? data;
+  String statuses;
+  List<Datum> data;
 
-  factory RekapAbsen.fromJson(Map<String, dynamic> json) => RekapAbsen(
-        totalRows: json["totalRows"],
-        data: List<HistoriAbsen>.from(
-            json["data"].map((x) => HistoriAbsen.fromJson(x))),
+  factory HistoriModel.fromJson(Map<String, dynamic> json) => HistoriModel(
+        statuses: json["statuses"],
+        data: List<Datum>.from(json["data"].map((x) => Datum.fromJson(x))),
       );
 
   Map<String, dynamic> toJson() => {
-        "totalRows": totalRows,
-        "data": List<dynamic>.from(data!.map((x) => x.toJson())),
+        "statuses": statuses,
+        "data": List<dynamic>.from(data.map((x) => x.toJson())),
       };
 }
 
-class HistoriAbsen {
-  HistoriAbsen({
-    this.absIdents,
-    this.absUsrnam,
-    this.waktu,
-    this.jenisAbsen,
-    this.absUsrdat,
-    this.absAddress,
+class Datum {
+  Datum({
+    required this.id,
+    required this.username,
+    required this.date,
+    required this.status,
+    required this.address,
+    required this.jenis,
   });
 
-  int? absIdents;
-  String? absUsrnam;
-  String? waktu;
-  String? jenisAbsen;
-  String? absUsrdat;
-  String? absAddress;
+  int id;
+  String username;
+  DateTime date;
+  int status;
+  String address;
+  int jenis;
 
-  factory HistoriAbsen.fromJson(Map<String, dynamic> json) => HistoriAbsen(
-        absIdents: json["absIdents"],
-        absUsrnam: json["absUsrnam"],
-        waktu: json["waktu"],
-        jenisAbsen: json["jenisAbsen"],
-        absUsrdat: json["absUsrdat"],
-        absAddress: json["absAddress"],
+  factory Datum.fromJson(Map<String, dynamic> json) => Datum(
+        id: json["id"],
+        username: json["username"],
+        date: DateTime.parse(json["date"]),
+        status: json["status"],
+        address: json["address"],
+        jenis: json["jenis"],
       );
 
   Map<String, dynamic> toJson() => {
-        "absIdents": absIdents,
-        "absUsrnam": absUsrnam,
-        "waktu": waktu,
-        "jenisAbsen": jenisAbsen,
-        "absUsrdat": absUsrdat,
-        "absAddress": absAddress,
+        "id": id,
+        "username": username,
+        "date": date.toIso8601String(),
+        "status": status,
+        "address": address,
+        "jenis": jenis,
       };
 }

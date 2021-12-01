@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:aplikasi_asabri_nullsafety/pages/absen_page.dart';
 import 'package:aplikasi_asabri_nullsafety/pages/rekap_page.dart';
 import 'package:aplikasi_asabri_nullsafety/pages/settings_page.dart';
-import 'package:aplikasi_asabri_nullsafety/utils/background_service.dart';
 import 'package:aplikasi_asabri_nullsafety/utils/notification_helper.dart';
 import 'package:aplikasi_asabri_nullsafety/widget/platform_widget.dart';
 import 'package:flutter/cupertino.dart';
@@ -12,7 +11,6 @@ import 'package:flutter/material.dart';
 class HomePage extends StatefulWidget {
   @override
   _HomePageState createState() => _HomePageState();
-  static BackgroundService? _service;
 }
 
 class _HomePageState extends State<HomePage> {

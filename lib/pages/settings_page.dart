@@ -10,6 +10,7 @@ import 'package:aplikasi_asabri_nullsafety/widget/platform_widget.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsPage extends StatefulWidget {
   static const String settingsTitle = 'Settings';
@@ -53,9 +54,13 @@ class _SettingsPageState extends State<SettingsPage> {
               ListTile(
                 title: Text('Keluar'),
                 trailing: IconButton(
-                  onPressed: () {
-                    logout();
-                    Navigator.pushNamed(context, '/blank');
+                  onPressed: () async {
+                    SharedPreferences prefs =
+                        await SharedPreferences.getInstance();
+                    await prefs.setString('email', 'sonijulianto@gamial.com');
+                    await prefs.setString('password', '123456');
+                    Navigator.pushNamedAndRemoveUntil(
+                        context, '/sign-in', (route) => false);
                   },
                   icon: Icon(
                     Icons.chevron_right,
